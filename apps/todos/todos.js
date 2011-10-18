@@ -5,9 +5,31 @@
 
 /*globals Todos*/
 
-Todos = SC.Application.create();
+Todos = SC.Application.create({
+  store: SC.Store.create().from(SC.Record.fixtures)
+});
 
-Todos.Todo = SC.Object.extend({ title: null, isDone: false });
+Todos.Todo = SC.Record.extend({ 
+title: SC.Record.attr(String), isDone: SC.Record.attr(Boolean, {defaultValue: NO }),tag: SC.Record.attr(String, { defaultValue: 'work' })
+ });
+
+Todos.Todo.FIXTURES = [
+ 
+    { "guid": "todo-1",
+      "title": "Hamburger",
+      "isDone": false,
+      "tag": "eat" },
+ 
+    { "guid": "todo-2",
+      "title": "Read A Whole New Mind",
+      "isDone": false,
+      "tag": "work" },
+ 
+    { "guid": "todo-3",
+      "title": "Go to Gym",
+      "isDone": false,
+      "tag": "play" }
+];
 
 Todos.CreateTodoView = SC.TextField.extend({
   insertNewline: function() {
@@ -25,6 +47,12 @@ Todos.MarkDoneView = SC.Checkbox.extend({
   valueBinding: '.parentView.content.isDone'
 });
 
+Todos.SortingView = SC.TemplateView.extend({
+  sortBinding: 'Todos.todoListController.sortTodos',
+  contentBinding: 'Todos.todoListControllerList.arrangedObjects'
+});
+
+
 Todos.StatsView = SC.TemplateView.extend({
   remainingBinding: 'Todos.todoListController.remaining',
 
@@ -34,6 +62,7 @@ Todos.StatsView = SC.TemplateView.extend({
   }.property('remaining').cacheable()
 });
 
+
 Todos.todoListController = SC.ArrayController.create({
   // Initialize the array controller with an empty array.
   content: [],
@@ -42,17 +71,23 @@ Todos.todoListController = SC.ArrayController.create({
   // to the array.
 
   createTodo: function(title) {
-    var todo = Todos.Todo.create({ title: title });
-
-    this.pushObject(todo);
+   // var todo = Todos.Todo.create({ title: title });
+     Todos.store.createRecord(Todos.Todo, { title: title });
+   // this.pushObject(todo);
   },
 
   remaining: function() {
     return this.filterProperty('isDone', false).get('length');
   }.property('@each.isDone'),
 
-  clearCompletedTodos: function() {
-    this.filterProperty('isDone', true).forEach(this.removeObject, this);
+  clearCompletedTodos: function(){
+    this.filterProperty('isDone', true).forEach( function(item) {
+      item.destroy();
+    });
+  },
+  
+  sortTodos: function() {
+   this.set('orderBy', 'tag');
   },
 
   allAreDone: function(key, value) {
@@ -72,5 +107,7 @@ SC.ready(function() {
     layerId: 'todos',
     templateName: 'todos'
   });
+ var todos = Todos.store.find(Todos.Todo);
+ Todos.todoListController.set('content', todos);
 });
 

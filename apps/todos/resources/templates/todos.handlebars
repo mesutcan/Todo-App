@@ -10,8 +10,14 @@
   {{displayRemaining}} remaining.
 {{/view}}
 
+{{#view Todos.SortingView id="stats"}}
+  {{#view SC.Button classBinding="isActive" target="Todos.todoListController" action="sortTodos"}}
+    Sort By Tag
+  {{/view}}
+{{/view}}
+
 {{view SC.Checkbox class="mark-all-done" title="Mark All as Done" valueBinding="Todos.todoListController.allAreDone"}}
 
-{{#collection SC.TemplateCollectionView contentBinding="Todos.todoListController" itemClassBinding="content.isDone"}}
-  {{view Todos.MarkDoneView}}
+{{#collection SC.TemplateCollectionView contentBinding="Todos.todoListController.arrangedObjects" itemClassBinding="content.isDone"}}
+  {{view Todos.MarkDoneView}} - Tag - {{content.tag}}
 {{/collection}}
